@@ -1,0 +1,39 @@
+# Build output
+
+build/
+out/
+target/
+
+# Generated OS images
+
+*.iso
+*.img
+*.bin
+
+# Debug / emulator output
+
+*.log
+*.dump
+*.core
+
+# GDB
+
+.gdb_history
+
+# Editor / IDE files
+
+.vscode/
+.idea/
+
+# OS-specific files
+
+.DS_Store
+Thumbs.db
+Desktop.ini
+
+# Temporary files
+
+*.tmp
+*.swp
+*.swo
+*~
