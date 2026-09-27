@@ -42,15 +42,15 @@ The first milestone is to get a minimal AurOS kernel booting and printing output
 
 Planned areas include:
 
-1. Booting and kernel initialization
-2. CPU setup and interrupts
-3. Memory management
-4. Processes and scheduling
-5. System calls
-6. Basic userland and shell
-7. Filesystem
-8. Networking
-9. Security features
+1. * [ ] Booting and kernel initialization
+2. * [ ] CPU setup and interrupts
+3. * [ ] Memory management
+4. * [ ] Processes and scheduling
+5. * [ ] System calls
+6. * [ ] Basic userland and shell
+7. * [ ] Filesystem
+8. * [ ] Networking
+9. * [ ] Security features
 
 The roadmap will probably change as I learn more and discover interesting things to experiment with.
 
