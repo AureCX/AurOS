@@ -37,3 +37,10 @@ Desktop.ini
 *.swp
 *.swo
 *~
+
+# Compiled object files and shared libraries
+*.o
+*.so
+*.EFI
+OVMF_VARS.fd
+esp/EFI/BOOT/*
