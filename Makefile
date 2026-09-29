@@ -18,6 +18,8 @@ BOOTLOADER = bootloader.so
 
 BOOTFILE = esp/EFI/BOOT/$(NAME)
 
+KERNEL = kernel/kernel.elf
+
 $(BOOT_MAIN): $(BOOT_SRC)
 	$(CC) $(BOOT_SRC) -c -o $(BOOT_MAIN) \
 	-I/usr/include/efi \
@@ -33,7 +35,7 @@ $(KERNEL_MAIN): $(KERNEL_SRC)
 	$(CC) $(KERNEL_SRC) -c -o $(KERNEL_MAIN)	\
 	-ffreestanding
 
-$(BOOTLOADER): $(BOOT_MAIN) $(KERNEL_MAIN)
+$(BOOTLOADER): $(BOOT_MAIN)
 	$(LD) \
     -nostdlib \
     -znocombreloc \
@@ -46,6 +48,12 @@ $(BOOTLOADER): $(BOOT_MAIN) $(KERNEL_MAIN)
     -lefi \
     -lgnuefi \
     -o $(BOOTLOADER)
+
+$(KERNEL): $(KERNEL_MAIN) kernel/linker.ld
+	$(LD) \
+	-T kernel/linker.ld \
+	-o $(KERNEL) \
+	$(KERNEL_MAIN)
 
 $(NAME): $(BOOTLOADER)
 	$(OBJCOPY) \
@@ -67,7 +75,7 @@ $(BOOTFILE): $(NAME)
 	mkdir -p esp/EFI/BOOT
 	cp $(NAME) $(BOOTFILE)
 
-all: $(NAME) $(BOOTFILE)
+all: $(NAME) $(BOOTFILE) $(KERNEL)
 
 run: all
 	qemu-system-x86_64 \
@@ -76,7 +84,7 @@ run: all
     -drive format=raw,file=fat:rw:esp
 
 clean:
-	rm -f $(BOOTLOADER) $(NAME) $(BOOTFILE) $(BOOT_MAIN) $(KERNEL_MAIN)
+	rm -f $(BOOTLOADER) $(NAME) $(BOOTFILE) $(BOOT_MAIN) $(KERNEL_MAIN) $(KERNEL)
 
 re:	clean all
 
