@@ -1,6 +1,8 @@
 NAME	=	BOOTX64.EFI
 
-SRC	=	boot/uefi/main.c
+BOOT_SRC	=	boot/uefi/main.c
+
+KERNEL_SRC	=	kernel/main.c
 
 CC	=	gcc
 
@@ -8,14 +10,16 @@ LD	=	ld
 
 OBJCOPY	=	objcopy
 
-MAIN = main.o
+BOOT_MAIN = boot/uefi/main.o
+
+KERNEL_MAIN	=	kernel/main.o
 
 BOOTLOADER = bootloader.so
 
 BOOTFILE = esp/EFI/BOOT/$(NAME)
 
-$(MAIN): $(SRC)
-	$(CC) $(SRC) -c -o $(MAIN) \
+$(BOOT_MAIN): $(BOOT_SRC)
+	$(CC) $(BOOT_SRC) -c -o $(BOOT_MAIN) \
 	-I/usr/include/efi \
 	-I/usr/include/efi/x86_64 \
 	-fpic \
@@ -25,7 +29,11 @@ $(MAIN): $(SRC)
 	-fshort-wchar \
 	-mno-red-zone
 
-$(BOOTLOADER): $(MAIN)
+$(KERNEL_MAIN): $(KERNEL_SRC)
+	$(CC) $(KERNEL_SRC) -c -o $(KERNEL_MAIN)	\
+	-ffreestanding
+
+$(BOOTLOADER): $(BOOT_MAIN) $(KERNEL_MAIN)
 	$(LD) \
     -nostdlib \
     -znocombreloc \
@@ -33,7 +41,7 @@ $(BOOTLOADER): $(MAIN)
     -shared \
     -Bsymbolic \
     /usr/lib/crt0-efi-x86_64.o \
-    $(MAIN) \
+    $(BOOT_MAIN) \
     -L/usr/lib \
     -lefi \
     -lgnuefi \
@@ -68,7 +76,7 @@ run: all
     -drive format=raw,file=fat:rw:esp
 
 clean:
-	rm -f *.o $(BOOTLOADER) $(NAME) $(BOOTFILE)
+	rm -f $(BOOTLOADER) $(NAME) $(BOOTFILE) $(BOOT_MAIN) $(KERNEL_MAIN)
 
 re:	clean all
 
