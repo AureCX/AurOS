@@ -3,7 +3,6 @@ NAME	=	BOOTX64.EFI
 BOOT_SRC	=	boot/uefi/main.c
 
 KERNEL_SRC	=	kernel/main.c	\
-#				kernel/parsing_elf_segments.c
 
 CC	=	gcc
 
@@ -34,6 +33,8 @@ $(BOOT_MAIN): $(BOOT_SRC)
 
 $(KERNEL_MAIN): $(KERNEL_SRC)
 	$(CC) $(KERNEL_SRC) -c -o $(KERNEL_MAIN)	\
+	-ffreestanding
+	$(CC) boot/uefi/parsing_elf_segments.c -c -o boot/uefi/parsing_elf_segments.o \
 	-ffreestanding
 
 $(BOOTLOADER): $(BOOT_MAIN)

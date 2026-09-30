@@ -1,5 +1,6 @@
 #include <efi.h>
 #include <efilib.h>
+#include "elf.h"
 
 EFI_FILE_HANDLE GetVolume(EFI_HANDLE image)
 {
@@ -26,16 +27,6 @@ UINT64 FileSize(EFI_FILE_HANDLE FileHandle)
   ret = FileInfo->FileSize;
   FreePool(FileInfo);
   return ret;
-}
-
-EFI_STATUS CheckMagic(UINT8 *Buffer)
-{
-  if (Buffer[0] == 0x7F && Buffer[1] == 'E' && Buffer[2] == 'L' && Buffer[3] == 'F') {
-    Print(L"Valid ELF!\r\n");
-    return EFI_SUCCESS;
-  }
-  Print(L"Invalid ELF!\r\n");
-  return EFI_INVALID_PARAMETER;
 }
 
 EFI_STATUS efi_main(EFI_HANDLE ImageHandle, EFI_SYSTEM_TABLE *SystemTable)
