@@ -2,7 +2,8 @@ NAME	=	BOOTX64.EFI
 
 BOOT_SRC	=	boot/uefi/main.c
 
-KERNEL_SRC	=	kernel/main.c
+KERNEL_SRC	=	kernel/main.c	\
+#				kernel/parsing_elf_segments.c
 
 CC	=	gcc
 
@@ -54,6 +55,7 @@ $(KERNEL): $(KERNEL_MAIN) kernel/linker.ld
 	-T kernel/linker.ld \
 	-o $(KERNEL) \
 	$(KERNEL_MAIN)
+	cp kernel/kernel.elf esp/
 
 $(NAME): $(BOOTLOADER)
 	$(OBJCOPY) \
