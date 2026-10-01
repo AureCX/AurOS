@@ -2,7 +2,9 @@ NAME	=	BOOTX64.EFI
 
 BOOT_SRC	=	boot/uefi/main.c
 
-KERNEL_SRC	=	kernel/main.c	\
+PARSING_ELF_SRC	=	boot/uefi/parsing_elf_segments.c
+
+KERNEL_SRC	=	kernel/main.c
 
 CC	=	gcc
 
@@ -11,6 +13,8 @@ LD	=	ld
 OBJCOPY	=	objcopy
 
 BOOT_MAIN = boot/uefi/main.o
+
+PARSING_ELF = boot/uefi/parsing_elf_segments.o
 
 KERNEL_MAIN	=	kernel/main.o
 
@@ -24,6 +28,7 @@ $(BOOT_MAIN): $(BOOT_SRC)
 	$(CC) $(BOOT_SRC) -c -o $(BOOT_MAIN) \
 	-I/usr/include/efi \
 	-I/usr/include/efi/x86_64 \
+	-Iinclude \
 	-fpic \
 	-ffreestanding \
 	-fno-stack-protector \
@@ -33,11 +38,21 @@ $(BOOT_MAIN): $(BOOT_SRC)
 
 $(KERNEL_MAIN): $(KERNEL_SRC)
 	$(CC) $(KERNEL_SRC) -c -o $(KERNEL_MAIN)	\
-	-ffreestanding
-	$(CC) boot/uefi/parsing_elf_segments.c -c -o boot/uefi/parsing_elf_segments.o \
-	-ffreestanding
+	-Iinclude -ffreestanding 
 
-$(BOOTLOADER): $(BOOT_MAIN)
+$(PARSING_ELF): $(PARSING_ELF_SRC)
+	$(CC) $(PARSING_ELF_SRC) -c -o $(PARSING_ELF) \
+	-I/usr/include/efi \
+	-I/usr/include/efi/x86_64 \
+	-Iinclude \
+	-fpic \
+	-ffreestanding \
+	-fno-stack-protector \
+	-fno-stack-check \
+	-fshort-wchar \
+	-mno-red-zone
+
+$(BOOTLOADER): $(PARSING_ELF) $(BOOT_MAIN)
 	$(LD) \
     -nostdlib \
     -znocombreloc \
@@ -46,7 +61,8 @@ $(BOOTLOADER): $(BOOT_MAIN)
     -Bsymbolic \
     /usr/lib/crt0-efi-x86_64.o \
     $(BOOT_MAIN) \
-    -L/usr/lib \
+	$(PARSING_ELF) \
+	-L/usr/lib \
     -lefi \
     -lgnuefi \
     -o $(BOOTLOADER)
@@ -87,7 +103,7 @@ run: all
     -drive format=raw,file=fat:rw:esp
 
 clean:
-	rm -f $(BOOTLOADER) $(NAME) $(BOOTFILE) $(BOOT_MAIN) $(KERNEL_MAIN) $(KERNEL)
+	rm -f $(BOOTLOADER) $(NAME) $(BOOTFILE) $(BOOT_MAIN) $(PARSING_ELF) $(KERNEL_MAIN) $(KERNEL)
 
 re:	clean all
 
