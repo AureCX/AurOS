@@ -37,6 +37,8 @@ EFI_STATUS efi_main(EFI_HANDLE ImageHandle, EFI_SYSTEM_TABLE *SystemTable)
     UINT64 ReadSize;
     UINT8 *Buffer = NULL;
     EFI_STATUS Status;
+    Elf64_Ehdr *Header = NULL;
+    Elf64_Phdr *ProgramHeaders = NULL;
 
     InitializeLib(ImageHandle, SystemTable);
     Volume = GetVolume(ImageHandle);
@@ -72,6 +74,18 @@ EFI_STATUS efi_main(EFI_HANDLE ImageHandle, EFI_SYSTEM_TABLE *SystemTable)
       uefi_call_wrapper(FileHandle->Close, 1, FileHandle);
       FreePool(Buffer);
       return EFI_INVALID_PARAMETER;
+    }
+    Header = ParseElfHeader(Buffer, ReadSize);
+    if (!Header) {
+        uefi_call_wrapper(FileHandle->Close, 1, FileHandle);
+        FreePool(Buffer);
+        return EFI_INVALID_PARAMETER;
+    }
+    ProgramHeaders = ParseProgramHeaders(Buffer, ReadSize, Header);
+    if (!ProgramHeaders) {
+        uefi_call_wrapper(FileHandle->Close, 1, FileHandle);
+        FreePool(Buffer);
+        return EFI_INVALID_PARAMETER;
     }
     uefi_call_wrapper(FileHandle->Close, 1, FileHandle);
     FreePool(Buffer);
