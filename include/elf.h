@@ -4,6 +4,8 @@
     #include <efi.h>
     #include <efilib.h>
 
+    #define PT_LOAD 1
+
     typedef struct {
         unsigned char e_ident[16];
         uint16_t      e_type;
@@ -31,6 +33,12 @@
         uint64_t p_memsz;
         uint64_t p_align;
     } Elf64_Phdr;
+
+    typedef struct {
+        UINT64 LowestAddr;
+        UINT64 HighestAddr;
+        UINT64 Range;
+    } SegmentRange;
 
     EFI_STATUS CheckMagic(UINT8 *Buffer);
     Elf64_Ehdr *ParseElfHeader(UINT8 *Buffer, UINT64 HeaderSize);
