@@ -5,6 +5,7 @@
     #include <efilib.h>
 
     #define PT_LOAD 1
+    #define PF_X 1
 
     typedef struct {
         unsigned char e_ident[16];
