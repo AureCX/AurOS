@@ -12,6 +12,16 @@ EFI_STATUS CheckMagic(UINT8 *Buffer)
   return EFI_INVALID_PARAMETER;
 }
 
+EFI_STATUS ValidateEntryPoint(Elf64_Ehdr *Header, Elf64_Phdr *ProgramHeaders, UINT16 NbProgramHeaders)
+{
+  UINT8 validated = 0;
+
+  for (UINT16 i = 0; i < NbProgramHeaders; ++i)
+    if (ProgramHeaders[i].p_type == PT_LOAD) {
+      ;
+    }
+}
+
 Elf64_Ehdr *ParseElfHeader(UINT8 *Buffer, UINT64 HeaderSize)
 {
   if (HeaderSize < sizeof(Elf64_Ehdr)) {
