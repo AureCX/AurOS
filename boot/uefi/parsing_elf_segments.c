@@ -12,16 +12,6 @@ EFI_STATUS CheckMagic(UINT8 *Buffer)
   return EFI_INVALID_PARAMETER;
 }
 
-EFI_STATUS ValidateEntryPoint(Elf64_Ehdr *Header, Elf64_Phdr *ProgramHeaders, UINT16 NbProgramHeaders)
-{
-  UINT8 validated = 0;
-
-  for (UINT16 i = 0; i < NbProgramHeaders; ++i)
-    if (ProgramHeaders[i].p_type == PT_LOAD) {
-      ;
-    }
-}
-
 Elf64_Ehdr *ParseElfHeader(UINT8 *Buffer, UINT64 HeaderSize)
 {
   if (HeaderSize < sizeof(Elf64_Ehdr)) {
@@ -41,13 +31,13 @@ Elf64_Ehdr *ParseElfHeader(UINT8 *Buffer, UINT64 HeaderSize)
   return Header;
 }
 
-SegmentRange FindSegmentsRange(uint16_t NbProgramHeaders, Elf64_Phdr *ProgramHeaders)
+SegmentRange FindSegmentsRange(UINT16 NbProgramHeaders, Elf64_Phdr *ProgramHeaders)
 {
   UINT64 LowestAddr = 0;
   UINT64 HighestAddr = 0;
   int FoundSegment = 0;
 
-  for (uint64_t i = 0; i < NbProgramHeaders; ++i) {
+  for (UINT64 i = 0; i < NbProgramHeaders; ++i) {
     if (ProgramHeaders[i].p_type == PT_LOAD) {
       UINT64 SegmentStart = ProgramHeaders[i].p_vaddr;
       UINT64 SegmentEnd = ProgramHeaders[i].p_vaddr + ProgramHeaders[i].p_memsz;
@@ -68,6 +58,28 @@ SegmentRange FindSegmentsRange(uint16_t NbProgramHeaders, Elf64_Phdr *ProgramHea
   if (LowestAddr != 0 && LowestAddr % 4096 != 0)
     for (; LowestAddr % 4096 != 0; --LowestAddr);
   return (SegmentRange){LowestAddr, HighestAddr, HighestAddr - LowestAddr};
+}
+
+EFI_STATUS ValidateEntryPoint(Elf64_Ehdr *Header, Elf64_Phdr *ProgramHeaders, UINT16 NbProgramHeaders)
+{
+  Elf64_Phdr *Segment = NULL;
+  UINT16 validated = 0;
+
+  for (UINT16 i = 0; i < NbProgramHeaders; ++i) {
+    Segment = &ProgramHeaders[i];
+    if (Segment->p_type != PT_LOAD)
+      continue;
+    if (!(Segment->p_flags & PF_X))
+      continue;
+    if (Header->e_entry < Segment->p_vaddr)
+      continue;
+    if (Header->e_entry - Segment->p_vaddr >= Segment->p_memsz)
+      continue;
+    Print(L"Kernel's entry point validated.\r\n");
+    return EFI_SUCCESS;
+  }
+  Print(L"Kernel entry point isn't inside an executable segment.\r\n");
+  return EFI_LOAD_ERROR;
 }
 
 EFI_STATUS LoadSegment(UINT8 *Buffer, UINT64 BufferSize, Elf64_Phdr *ProgramHeader)
@@ -130,6 +142,9 @@ Elf64_Phdr *ParseProgramHeaders(UINT8 *Buffer, UINT64 BufferSize, Elf64_Ehdr *He
   UINT64 NbPages = 0;
   for (; SegmentsRange.Range > NbPages * 4096; ++NbPages);
   Print(L"Number of Pages to allocate: %lu\r\n", (unsigned long)NbPages);
+  EFI_STATUS Kernel_status = ValidateEntryPoint(Header, ProgramHeaders, Header->e_phnum);
+  if (EFI_ERROR(Kernel_status))
+    return NULL;
   EFI_STATUS Status = uefi_call_wrapper(BS->AllocatePages, 4, AllocateAddress, EfiLoaderData, NbPages, &SegmentsRange.LowestAddr);
   if (EFI_ERROR(Status)) {
     Print(L"Couldn't allocate pages for the kernel segments, aborting.\r\n");

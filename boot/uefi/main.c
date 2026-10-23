@@ -87,8 +87,10 @@ EFI_STATUS efi_main(EFI_HANDLE ImageHandle, EFI_SYSTEM_TABLE *SystemTable)
         FreePool(Buffer);
         return EFI_INVALID_PARAMETER;
     }
+    UINT64 KernelEntry = Header->e_entry;
     uefi_call_wrapper(FileHandle->Close, 1, FileHandle);
     FreePool(Buffer);
+    Print(L"Kernel Entry: 0x%lx\r\n", KernelEntry);
     Print(L"Press any key to exit...\r\n");
     WaitForSingleEvent(ST->ConIn->WaitForKey, 0);
     return EFI_SUCCESS;
